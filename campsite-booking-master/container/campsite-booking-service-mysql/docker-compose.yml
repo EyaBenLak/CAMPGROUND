@@ -1,0 +1,32 @@
+version: '3.7'
+
+services:
+  db:
+    image: mysql:8-debian
+    environment:
+      # Setting this variable to yes is not recommended
+      # unless you really know what you are doing
+      - MYSQL_ALLOW_EMPTY_PASSWORD=yes
+    ports:
+      - "3316:3306"
+      - "33070:33060"
+    volumes:
+      - ../campsite-booking-service-mysql/mysql/conf.d:/etc/mysql/conf.d
+      - ../campsite-booking-service-mysql/mysql/initdb.d:/docker-entrypoint-initdb.d
+
+  campsite-booking-service:
+    # build from the source
+    build:
+      context: ../..
+      dockerfile: container/Dockerfile
+    # or use the latest image from Docker Hub
+    # image: ibaiborodine/campsite-booking:latest
+    depends_on:
+      - db
+    environment:
+      # sleep for 20 seconds while the database is being initialized
+      - WAIT_FOR_DB=20
+      - SPRING_PROFILES_ACTIVE=mysql
+      - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/campsite?useUnicode=true
+    ports:
+      - "80:8080"
